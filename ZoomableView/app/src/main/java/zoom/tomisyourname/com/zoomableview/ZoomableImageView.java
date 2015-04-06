@@ -186,7 +186,13 @@ public class ZoomableImageView extends ImageView implements
         mLastPointCount = pointCount;
 
         switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if(getScale() > initScale) getParent().requestDisallowInterceptTouchEvent(true);
+                break;
             case MotionEvent.ACTION_MOVE:
+
+                if(getScale() > initScale) getParent().requestDisallowInterceptTouchEvent(true);
+
                 // can move
                 float dx = x - mLastX;
                 float dy = y - mLastY;
