@@ -1,0 +1,7 @@
+<resources>
+    <declare-styleable name="WorldMapView">
+        <attr name="background_map" format="color|reference" />
+        <attr name="mark_width" format="integer" />
+        <attr name="mark_height" format="integer" />
+    </declare-styleable>
+</resources>
