@@ -5,6 +5,8 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -19,26 +21,29 @@ import widget.zain.vibin.it.worldmapwidget.R;
  */
 public class WorldMapView extends View {
 
+    private static final String TAG = "WorldMapView";
     private Drawable mBackgroundMapDrawable;
-    private List<CustomMark> mCustomMarks;
+    private List<MarkWrapper> mMarkWrappers;
     private int markWidth = 0;
     private int markHeight = 0;
+    private OnMarkClickListener onMarkClickListener;
+    private CustomMark clickedMark = null;
 
     public WorldMapView(Context context) {
         super(context);
-        mCustomMarks = new ArrayList<CustomMark>();
+        mMarkWrappers = new ArrayList<MarkWrapper>();
         init(null, 0);
     }
 
     public WorldMapView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mCustomMarks = new ArrayList<CustomMark>();
+        mMarkWrappers = new ArrayList<MarkWrapper>();
         init(attrs, 0);
     }
 
     public WorldMapView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        mCustomMarks = new ArrayList<CustomMark>();
+        mMarkWrappers = new ArrayList<MarkWrapper>();
         init(attrs, defStyle);
     }
 
@@ -67,14 +72,40 @@ public class WorldMapView extends View {
         a.recycle();
     }
 
-    private int getTop(CustomMark mark) {
-        double centerY = getHeight() * (90 - mark.lng) / 180.0;
-        return (int) (centerY - markHeight / 2);
+    private CustomMark getClickedMark(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+        if(onMarkClickListener!= null && mMarkWrappers != null) {
+            for(MarkWrapper wrapper : mMarkWrappers) {
+                if((x > wrapper.left && x < wrapper.right) && (y > wrapper.top && y < wrapper.bottom)) {
+                    return wrapper.realMark;
+                }
+            }
+        }
+        return null;
     }
 
-    private int getLeft(CustomMark mark) {
-        double centerX = getWidth() * (mark.lat + 180) / 360.0;
-        return (int) (centerX - markWidth / 2);
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "onTouch >>>" + event.getAction());
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                clickedMark = getClickedMark(event);
+                if(clickedMark != null) return true;
+                break;
+            case MotionEvent.ACTION_UP:
+                if(clickedMark != null) {
+                    onMarkClickListener.onMarkClicked(clickedMark.id);
+                    Log.d(TAG, "clicked a mark with id >>> " + clickedMark.id);
+                } else {
+                    Log.d(TAG, "clicked a none mark area");
+                }
+                clickedMark = null;
+                break;
+            default:
+                break;
+        }
+        return super.onTouchEvent(event);
     }
 
     @Override
@@ -96,13 +127,13 @@ public class WorldMapView extends View {
             mBackgroundMapDrawable.draw(canvas);
         }
 
-        if(mCustomMarks != null) {
-            for(CustomMark mark : mCustomMarks) {
-                Drawable markDrable = getResources().getDrawable(mark.drawable);
+        if(mMarkWrappers != null) {
+            for(MarkWrapper wrapper : mMarkWrappers) {
+                if(wrapper == null) return;
+                wrapper.fixBounds(getWidth(), getHeight());
+                Drawable markDrable = getResources().getDrawable(wrapper.realMark.drawable);
                 if(markDrable != null) {
-                    int left = getLeft(mark);
-                    int top = getTop(mark);
-                    markDrable.setBounds(left, top, left + markWidth, top + markHeight);
+                    markDrable.setBounds(wrapper.left, wrapper.top, wrapper.right, wrapper.bottom);
                     markDrable.setCallback(this);
                     markDrable.draw(canvas);
                 }
@@ -131,8 +162,44 @@ public class WorldMapView extends View {
 
     public void addMark(CustomMark mark) {
         if(mark != null) {
-            mCustomMarks.add(mark);
+            mMarkWrappers.add(new MarkWrapper(mark));
             invalidate();
         }
+    }
+
+    public void setOnMarkClickListener(OnMarkClickListener onMarkClickListener) {
+        this.onMarkClickListener = onMarkClickListener;
+    }
+
+    private class MarkWrapper {
+
+        public CustomMark realMark;
+        public int left, top, right, bottom;
+
+        public MarkWrapper(CustomMark mark) {
+            realMark = mark;
+        }
+
+        public void fixBounds(int mapWidth, int mapHeight) {
+            left = getLeft(realMark, mapWidth);
+            top = getTop(realMark, mapHeight);
+            right = left + markWidth;
+            bottom = top + markHeight;
+            Log.d(TAG, String.format("(%d, %d, %d, %d)", left, top, right, bottom));
+        }
+
+        private int getTop(CustomMark mark, int mapHeight) {
+            double centerY = mapHeight * (90 - mark.lng) / 180.0;
+            return (int) (centerY - markHeight / 2);
+        }
+
+        private int getLeft(CustomMark mark, int mapWidth) {
+            double centerX = mapWidth * (mark.lat + 180) / 360.0;
+            return (int) (centerX - markWidth / 2);
+        }
+    }
+
+    public interface OnMarkClickListener {
+        public void onMarkClicked(int markId);
     }
 }

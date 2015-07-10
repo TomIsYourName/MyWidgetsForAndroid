@@ -2,6 +2,7 @@ package widget.zain.vibin.it.worldmapwidget;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -10,7 +11,7 @@ import java.util.Random;
 import widget.zain.vibin.it.worldmapwidget.widget.CustomMark;
 import widget.zain.vibin.it.worldmapwidget.widget.WorldMapView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements WorldMapView.OnMarkClickListener {
 
     private WorldMapView worldMapView;
 
@@ -22,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
         worldMapView = (WorldMapView) findViewById(R.id.wmv);
 
         worldMapView.addMark(new CustomMark(R.drawable.mark, 120.0, 30.0));// Shanghai, China
+
+        worldMapView.setOnMarkClickListener(this);
     }
 
     @Override
@@ -41,5 +44,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onMarkClicked(int markId) {
+        Log.d("mt", "clicked id is >>> " + markId);
     }
 }
