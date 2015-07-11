@@ -167,6 +167,16 @@ public class WorldMapView extends View {
         }
     }
 
+    public void addMarks(List<CustomMark> marks) {
+        if(marks != null && !marks.isEmpty()) {
+            for(CustomMark mark : marks) {
+                mMarkWrappers.add(new MarkWrapper(mark));
+            }
+            invalidate();
+        }
+    }
+
+
     public void setOnMarkClickListener(OnMarkClickListener onMarkClickListener) {
         this.onMarkClickListener = onMarkClickListener;
     }

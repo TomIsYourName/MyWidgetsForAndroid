@@ -24,6 +24,8 @@ public class MainActivity extends AppCompatActivity implements WorldMapView.OnMa
 
         worldMapView.addMark(new CustomMark(R.drawable.mark, 120.0, 30.0));// Shanghai, China
 
+        worldMapView.addMark(new CustomMark(R.drawable.mark, -120.0, 30.0));// US
+
         worldMapView.setOnMarkClickListener(this);
     }
 
