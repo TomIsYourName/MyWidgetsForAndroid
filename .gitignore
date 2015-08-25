@@ -29,3 +29,7 @@ proguard/
 #ide config
 .idea
 .idea/*
+.iml
+
+# git ignore itself
+.gitignore
